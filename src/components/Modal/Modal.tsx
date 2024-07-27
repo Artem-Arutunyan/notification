@@ -1,18 +1,30 @@
-import { FC, useContext } from "react";
+import { FC } from "react";
 import { IcClose } from "@/icons";
-import { NotificationProps } from "@/types";
-import { ModalContext } from "@/context";
+import { ModalProps } from "@/types";
+import { Button } from "@/components";
 
-const Notification: FC<NotificationProps> = ({
+const Modal: FC<ModalProps> = ({
   title,
   description,
   type,
   image = "",
+  id,
+  setModal,
 }) => {
-  const { closeModal } = useContext(ModalContext);
-
   const pressOk = () => {
     console.log("OK");
+  };
+
+  const openNewModal = () => {
+    setModal((prev) => {
+      return [...prev, { id: prev[prev.length - 1].id + 1 }];
+    });
+  };
+
+  const closeModal = () => {
+    setModal((prev) => {
+      return prev.filter((el) => el.id !== id);
+    });
   };
 
   return (
@@ -57,26 +69,24 @@ const Notification: FC<NotificationProps> = ({
                       ) : (
                         description
                       )}
+                      {type === "with-recursive" && (
+                        <span>Количество вложенностей - {id}</span>
+                      )}
                     </p>
                   </div>
                 </div>
               </div>
               {type === "with-buttons" && (
                 <div className="flex justify-end gap-3 bg-gray-50 px-4 py-3">
-                  <button
-                    type="button"
-                    className="justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-indigo-600 hover:text-white"
-                    onClick={pressOk}
-                  >
-                    ОК
-                  </button>
-                  <button
-                    type="button"
-                    className="justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 sm:w-auto ring-gray-300 hover:bg-indigo-600 hover:text-white"
-                    onClick={closeModal}
-                  >
-                    Отмена
-                  </button>
+                  <Button onClick={pressOk}>ОК</Button>
+                  <Button onClick={closeModal}>Отмена</Button>
+                </div>
+              )}
+              {type === "with-recursive" && (
+                <div className="flex justify-center pb-3">
+                  <Button onClick={openNewModal}>
+                    Открыть ещё одно модальное окно
+                  </Button>
                 </div>
               )}
             </div>
@@ -87,4 +97,4 @@ const Notification: FC<NotificationProps> = ({
   );
 };
 
-export default Notification;
+export default Modal;

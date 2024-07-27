@@ -7,8 +7,12 @@ const TaskCompleted = () => {
 
   const [count, setCount] = useState(0);
 
+  const addNumberOfClick = () => {
+    setCount(count + 1);
+  };
+
   const handleClickFirtsBtn = () => {
-    setCount((prev) => prev + 1);
+    addNumberOfClick();
     openModal({
       title: "Модальное окно с картинкой",
       type: "no-buttons",
@@ -17,7 +21,7 @@ const TaskCompleted = () => {
   };
 
   const handleClickSecondBtn = () => {
-    setCount((prev) => prev + 1);
+    addNumberOfClick();
     openModal({
       title: "Модальное окно с текстом",
       type: "no-buttons",
@@ -27,7 +31,7 @@ const TaskCompleted = () => {
   };
 
   const handleClickThirdBtn = () => {
-    setCount((prev) => prev + 1);
+    addNumberOfClick();
     openModal({
       title: "Модальное окно с текстом и кнопками ОК и Отмена",
       type: "with-buttons",
@@ -37,7 +41,7 @@ const TaskCompleted = () => {
   };
 
   const handleClickFourthBtn = () => {
-    setCount((prev) => prev + 1);
+    addNumberOfClick();
     openModal({
       title:
         "Модальное окно с текстом, отражающим количество нажатий на любую из 5 кнопок.",
@@ -47,12 +51,11 @@ const TaskCompleted = () => {
   };
 
   const handleClickFifthBtn = () => {
-    setCount((prev) => prev + 1);
+    addNumberOfClick();
     openModal({
       title:
         "Модальное окно с текстом в котором отражается количество открытых вложенностей",
-      type: "no-buttons",
-      description: ``,
+      type: "with-recursive",
     });
   };
 

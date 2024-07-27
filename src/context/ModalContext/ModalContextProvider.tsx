@@ -1,41 +1,42 @@
 import { FC, ReactNode, useState } from "react";
 import { ModalContext } from "./ModalContext";
-import { Notification } from "@/components";
-import { NotificationProps } from "@/types";
+import { Modal } from "@/components";
+import { ModalState } from "@/types";
 
 interface ModalProviderProps {
   children: ReactNode;
 }
 
 export const ModalProvider: FC<ModalProviderProps> = ({ children }) => {
-  const [modalOpened, setModalOpened] = useState(false);
-  const [modalContent, setModalCOntent] = useState<NotificationProps>({
+  const [modal, setModal] = useState<Array<{ id: number }>>([]);
+  const [modalContent, setModalCOntent] = useState<ModalState>({
     title: "Заголовок не указан",
     type: "no-buttons",
     description: "Описание не указано",
   });
 
-  const openModal = (modalConfig: NotificationProps) => {
-    if (!modalConfig) {
-      setModalOpened(true);
+  const openModal = (modalConfig: ModalState) => {
+    if (modal.length !== 0) {
+      setModalCOntent(modalConfig);
+      setModal((prev) => {
+        return [...prev, { id: prev[prev.length - 1].id + 1 }];
+      });
     } else {
       setModalCOntent(modalConfig);
-      setModalOpened(true);
+      setModal([{ id: 1 }]);
     }
-  };
-
-  const closeModal = () => {
-    setModalOpened(false);
   };
 
   const valueModalProvider = {
     openModal,
-    closeModal,
   };
 
   return (
     <ModalContext.Provider value={valueModalProvider}>
-      {modalOpened && <Notification {...modalContent} />}
+      {modal.length !== 0 &&
+        modal.map((el) => (
+          <Modal key={el.id} id={el.id} setModal={setModal} {...modalContent} />
+        ))}
       {children}
     </ModalContext.Provider>
   );

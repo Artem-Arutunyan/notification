@@ -1,4 +1,4 @@
 export type { IRoute, TRoutesNames } from './RouteTypes';
-export type { NotificationProps } from './NotificationProps';
+export type { ModalProps, ModalState } from './ModalProps';
 
 
