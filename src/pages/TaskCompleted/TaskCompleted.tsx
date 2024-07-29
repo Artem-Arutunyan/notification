@@ -1,18 +1,11 @@
 import { Button } from "@/components";
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import { ModalContext } from "@/context";
 
 const TaskCompleted = () => {
   const { openModal } = useContext(ModalContext);
 
-  const [count, setCount] = useState(0);
-
-  const addNumberOfClick = () => {
-    setCount(count + 1);
-  };
-
   const handleClickFirtsBtn = () => {
-    addNumberOfClick();
     openModal({
       title: "Модальное окно с картинкой",
       type: "no-buttons",
@@ -21,7 +14,6 @@ const TaskCompleted = () => {
   };
 
   const handleClickSecondBtn = () => {
-    addNumberOfClick();
     openModal({
       title: "Модальное окно с текстом",
       type: "no-buttons",
@@ -31,7 +23,6 @@ const TaskCompleted = () => {
   };
 
   const handleClickThirdBtn = () => {
-    addNumberOfClick();
     openModal({
       title: "Модальное окно с текстом и кнопками ОК и Отмена",
       type: "with-buttons",
@@ -41,17 +32,15 @@ const TaskCompleted = () => {
   };
 
   const handleClickFourthBtn = () => {
-    addNumberOfClick();
     openModal({
       title:
         "Модальное окно с текстом, отражающим количество нажатий на любую из 5 кнопок.",
-      type: "no-buttons",
-      description: `Количество нажатий на кнопки - ${count}`,
+      type: "with-count",
+      description: `Количество нажатий на кнопки - `,
     });
   };
 
   const handleClickFifthBtn = () => {
-    addNumberOfClick();
     openModal({
       title:
         "Модальное окно с текстом в котором отражается количество открытых вложенностей",

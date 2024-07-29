@@ -10,6 +10,7 @@ const Modal: FC<ModalProps> = ({
   image = "",
   id,
   setModal,
+  count,
 }) => {
   const pressOk = () => {
     console.log("OK");
@@ -72,6 +73,7 @@ const Modal: FC<ModalProps> = ({
                       {type === "with-recursive" && (
                         <span>Количество вложенностей - {id}</span>
                       )}
+                      {type === "with-count" && count}
                     </p>
                   </div>
                 </div>
