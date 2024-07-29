@@ -73,7 +73,7 @@ const Modal: FC<ModalProps> = ({
                       {type === "with-recursive" && (
                         <span>Количество вложенностей - {id}</span>
                       )}
-                      {type === "with-count" && count}
+                      {type === "with-count" && `Количество нажатий на кнопки - ${count}`}
                     </p>
                   </div>
                 </div>
