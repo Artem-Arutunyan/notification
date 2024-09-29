@@ -1,47 +1,29 @@
 import { FC, useState } from "react";
 import Task from "../Task/Task";
-import { FaRegTrashAlt } from "react-icons/fa";
-import { Column, Id } from "../types";
+import { FaPlusCircle, FaRegTrashAlt } from "react-icons/fa";
+import { Column, Id, ITask } from "../types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const todos = [
-  {
-    userId: 1,
-    id: "1",
-    title: "Купить хлеба",
-    completed: false,
-  },
-  {
-    userId: 1,
-    id: "2",
-    title: "Сходить в магазин",
-    completed: true,
-  },
-  {
-    userId: 1,
-    id: "3",
-    title: "Починить машину",
-    completed: false,
-  },
-  {
-    userId: 1,
-    id: "4",
-    title: "Отдать в ремонт сапоги",
-    completed: true,
-  },
-];
 
 interface TaskColumnProps {
   column: Column;
+  tasks: ITask[];
   deleteColumn: (id: Id) => void;
   updateColumnTitle: (id: Id, title: string) => void;
+  createTask: (columnId: Id) => void;
+  deleteTask: (taskId: Id) => void;
+  updateTask: (taskId: Id, content: string) => void;
 }
 
 const TaskColumn: FC<TaskColumnProps> = ({
   column,
+  tasks,
   deleteColumn,
   updateColumnTitle,
+  createTask,
+  deleteTask,
+  updateTask
 }) => {
   //Стейт для редактирования названия заголовка столбца
   const [editTitle, setEditTitle] = useState(false);
@@ -57,13 +39,13 @@ const TaskColumn: FC<TaskColumnProps> = ({
   } = useSortable({
     id: column.id,
     data: { type: "Column", column: column },
-    disabled: editTitle, //это нужно для того, чтобы отключить функцию перетаскивания, когда мы редактируем имя заголовка таблицы
+    disabled: editTitle, //это нужно для того, чтобы отключить функцию перетаскивания, когда мы редактируем имя заголовка таблицы, т.к. мы тянем за заголовок при перетаскивании
   });
 
   //стили для анимаций перемещения
   const style = {
     transition, //анимация при перестановке столбцов между друг другом
-    transform: CSS.Transform.toString(transform), //анимация перетаскивания столбца
+    transform: CSS.Translate.toString(transform), //анимация перетаскивания столбца
   };
 
   //Это условие для того, чтобы когда мы тащим колонку, то на её месте
@@ -87,8 +69,8 @@ const TaskColumn: FC<TaskColumnProps> = ({
         </div>
         <div className="rounded-b bg-gray-400 w-full p-2 mr-3 pt-4">
           <div className="text-sm mt-2">
-            {todos.map((todo) => {
-              return <Task key={todo.id} text={todo.title} />;
+             {tasks.map((task) => {
+              return <Task updateTask={updateTask} deleteTask={deleteTask} key={task.id} task={task} />;
             })}
           </div>
         </div>
@@ -138,10 +120,17 @@ const TaskColumn: FC<TaskColumnProps> = ({
       </div>
       {/* Заголовок колонки */}
 
-      <div className="rounded-b bg-gray-400 w-full p-2 mr-3 pt-4">
-        <div className="text-sm mt-2">
-          {todos.map((todo) => {
-            return <Task key={todo.id} text={todo.title} />;
+      <button
+          onClick={() => createTask(column.id)}
+          className="flex flex-row gap-2 p-2 h-7 justify-center items-center bg-gray-400 hover:bg-green-700"
+        >
+          <FaPlusCircle />
+          <p className="text-sm">Добавить задачу</p>
+        </button>
+      <div className="rounded-b bg-gray-400 w-full p-2">
+        <div className="text-sm">
+          {tasks.map((task) => {
+            return <Task updateTask={updateTask} deleteTask={deleteTask} key={task.id} task={task} />;
           })}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import TaskColumn from "./TasksColumn/TaskColumn";
-import { Column, Id } from "./types";
+import { Column, Id, ITask } from "./types";
 import { generateId } from "./helpers";
 import { FaRegPlusSquare } from "react-icons/fa";
 import {
@@ -16,9 +16,14 @@ import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 
 const Board = () => {
+  //Стейт для колонок
   const [columns, setColumns] = useState<Column[]>([
     { id: "123", title: "Список дел" },
   ]);
+
+  //Стейт для задач внутри колонок
+  const [tasks, setTasks] = useState<ITask[]>([]);
+console.log(tasks);
 
   //Массив из id столбцов, для передачи в контекст SortableContext в items
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
@@ -101,6 +106,7 @@ const Board = () => {
     })
   );
 
+  //Ф-ия изменения заголовка колонки
   const updateColumnTitle = (id: Id, title: string) => {
     const newColumns = columns.map((col) => {
       //Если это не требуемая нам колонка, то мы оставляем её как есть
@@ -113,6 +119,38 @@ const Board = () => {
 
     setColumns(newColumns);
   };
+
+  //Ф-ия создания задачи
+  const createTask = (columnId: Id) => {
+    const newTask: ITask = {
+      id: generateId(),
+      columnId,
+      content: `Задача № ${tasks.length + 1}`,
+    };
+
+    setTasks([...tasks, newTask]);
+  };
+
+  //Ф-тя удаления задачи
+  const deleteTask = (taskId: Id) => {
+    const newTasks = tasks.filter((task) => {
+      return task.id !== taskId;
+    });
+
+    setTasks(newTasks);
+  };
+
+  //Ф-ия изменения текста задачи
+  const updateTask = (taskId: Id, content: string) => {
+    const newTasks = tasks.map((task)=>{
+      if(task.id !== taskId) {
+        return task;
+      }
+      return {...task, content}
+    })
+
+    setTasks(newTasks)
+  }
 
   return (
     <div className=" w-full h-96 p-5">
@@ -130,8 +168,13 @@ const Board = () => {
                 <TaskColumn
                   key={col.id}
                   column={col}
+                  //Передаем задачи, который относятся именно к это столбцу по id
+                  tasks={tasks.filter((task) => task.columnId == col.id)}
                   deleteColumn={deleteColumn}
                   updateColumnTitle={updateColumnTitle}
+                  createTask={createTask}
+                  deleteTask={deleteTask}
+                  updateTask={updateTask}
                 />
               );
             })}
@@ -151,6 +194,7 @@ const Board = () => {
           </div>
         </div>
         {/* Необходим для возможности перетаскивания колонки по всему экрану */}
+        {/* Здесь дублируется компонент  TaskColumn, чтобы при перетаскивании он отображался так же*/}
         {createPortal(
           <DragOverlay>
             {activeColumn && (
@@ -158,6 +202,10 @@ const Board = () => {
                 column={activeColumn}
                 deleteColumn={deleteColumn}
                 updateColumnTitle={updateColumnTitle}
+                createTask={createTask}
+                tasks={tasks.filter((task) => task.columnId == activeColumn.id)}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
               />
             )}
           </DragOverlay>,
