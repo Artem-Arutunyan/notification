@@ -6,6 +6,7 @@ import { FaRegPlusSquare } from "react-icons/fa";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -14,6 +15,7 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
+import Task from "./Task/Task";
 
 const Board = () => {
   //Стейт для колонок
@@ -23,13 +25,15 @@ const Board = () => {
 
   //Стейт для задач внутри колонок
   const [tasks, setTasks] = useState<ITask[]>([]);
-console.log(tasks);
 
   //Массив из id столбцов, для передачи в контекст SortableContext в items
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
   //Когда мы начинаем перетаскивать колонку, то в activeColumn записывается объект колонки, которую таскаем {id: '123', title: 'Список дел'}
   const [activeColumn, setActiveColumn] = useState<Column | null>();
+
+  //Когда мы начинаем перетаскивать задачу, то в activeTask записывается объект задачи, которую таскаем
+  const [activeTask, setActiveTask] = useState<ITask | null>();
 
   //Добавление столбца
   const createNewColum = () => {
@@ -46,7 +50,8 @@ console.log(tasks);
     setColumns(filteredColumns);
   };
 
-  //Эта функция нужна, чтобы можно было перетаскивать столбец по всему экрану
+  //Эта функция нужна, чтобы можно было перетаскивать столбец с задачами и задачки по всему экрану
+  //а не только внутри своего блока
   const onDragStart = (event: DragStartEvent) => {
     //Условие, если тип элемента "Column", который берется из хука useSortable из data
     if (event.active.data.current?.type === "Column") {
@@ -54,10 +59,21 @@ console.log(tasks);
       setActiveColumn(event.active.data.current.column);
       // return;
     }
+
+    //Условие, если тип элемента "Task", который берется из хука useSortable из data
+    if (event.active.data.current?.type === "Task") {
+      //Когда мы начинаем перетаскивать задачу, то в activeTask записывается объект задачи
+      setActiveTask(event.active.data.current.task);
+      // return;
+    }
   };
 
   //Эта функция нужна, чтобы можно было сохранять изменение положения столбца после перетаскивания
   const onDragEnd = (event: DragEndEvent) => {
+    //Этими двумя строками мы убираем страннное поведение, когда мы берем перетаскивать задачу и тащится весь столбец
+    setActiveColumn(null);
+    setActiveTask(null);
+
     const { active, over } = event;
 
     //Выходим из ф-ии, т.к. если нету over, то это означает, что мы не перетаскиваем элемент
@@ -142,15 +158,79 @@ console.log(tasks);
 
   //Ф-ия изменения текста задачи
   const updateTask = (taskId: Id, content: string) => {
-    const newTasks = tasks.map((task)=>{
-      if(task.id !== taskId) {
+    const newTasks = tasks.map((task) => {
+      if (task.id !== taskId) {
         return task;
       }
-      return {...task, content}
-    })
+      return { ...task, content };
+    });
 
-    setTasks(newTasks)
-  }
+    setTasks(newTasks);
+  };
+
+  //Эта функция нужна для логики сохранения при перетаскивании задачек из одного столбца в другой и между собой в одном столбце
+  const onDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    //Выходим из ф-ии, т.к. если нету over, то это означает, что мы не перетаскиваем элемент
+    if (!over) {
+      return;
+    }
+
+    const activeTaskId = active.id; //id перетаскиваемой задачи
+    const overTaskId = over.id; //id задачи на которую перемещаем
+
+    //Если взяли за задачу, но не перетащили её, то id до и после будут одинаковые
+    if (activeTaskId === overTaskId) {
+      return;
+    }
+
+    //Проверяем что типы перетаскиваемой задачи и ту, на которую перетаскиваем являются типом Task
+    const isActiveTask = active.data.current?.type === "Task";
+    const isOverTask = over.data.current?.type === "Task";
+
+    if (!isActiveTask) return;
+
+    //Имеем два сценария
+    //Перемещаем задачу внутри одной колонки и перемещаем задачу в другую колонку
+    //Если элемент, который перемещаем и на который перемещаем являются задачами, то
+    if (isActiveTask && isOverTask) {
+      setTasks((prevTasks) => {
+        //Получаем индекс активной задачи в массиве всех задач tasks
+        const activeIndex = prevTasks.findIndex((el) => el.id === activeTaskId);
+        //Получаем индекс конечной задачи в массиве всех задач tasks
+        const overIndex = prevTasks.findIndex((el) => el.id === overTaskId);
+
+
+        //Если id колонки, в которой находится активная задача (которую начали перетаскивать)
+        //не равна id колонки конечной точки задачи (куда перетаскиваем)
+        if (tasks[activeIndex].columnId !== tasks[overIndex].columnId) {
+          //тогда меняем id колонки для активной задачи на ту, в которую перетаскиваем
+          //так и происходит перемещение в новую колонку
+          tasks[activeIndex].columnId = tasks[overIndex].columnId;
+        }
+
+        //Теперь нам нужно поменять эти элементы местами в массиве
+        //В библиотеке Dnd-kit уже есть готовая функция arrayMove() для этого
+        //Просто передаем ей массив и индексы колонок, которые надо поменять местами
+        return arrayMove(prevTasks, activeIndex, overIndex);
+      });
+    }
+
+    //Это условие на случай, когда мы задачи тащим выше самой колонки, тогда она попадает в самый верх новой колонки
+    //и когда мы тащим задачу ниже столбца, то в самый низ
+    const isOverAColumn = over.data.current?.type === "Column";
+    if (isActiveTask && isOverAColumn) {
+      setTasks((prevTasks) => {
+        //Получаем индекс активной задачи в массиве всех задач tasks
+        const activeIndex = prevTasks.findIndex((el) => el.id === activeTaskId);
+
+        tasks[activeIndex].columnId = overTaskId;
+
+        return arrayMove(prevTasks, activeIndex, activeIndex);
+      });
+    }
+  };
 
   return (
     <div className=" w-full h-96 p-5">
@@ -159,6 +239,8 @@ console.log(tasks);
         sensors={sensor}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        //для перемещения задач в соседние колонки
+        onDragOver={onDragOver}
       >
         <div className="flex flex-row gap-4 items-start">
           {/* Контекст для перемещения столбцов */}
@@ -204,6 +286,13 @@ console.log(tasks);
                 updateColumnTitle={updateColumnTitle}
                 createTask={createTask}
                 tasks={tasks.filter((task) => task.columnId == activeColumn.id)}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
+              />
+            )}
+            {activeTask && (
+              <Task
+                task={activeTask}
                 deleteTask={deleteTask}
                 updateTask={updateTask}
               />

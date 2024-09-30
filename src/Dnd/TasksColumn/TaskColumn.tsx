@@ -1,8 +1,8 @@
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import Task from "../Task/Task";
 import { FaPlusCircle, FaRegTrashAlt } from "react-icons/fa";
 import { Column, Id, ITask } from "../types";
-import { useSortable } from "@dnd-kit/sortable";
+import { useSortable, SortableContext } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 
@@ -27,6 +27,8 @@ const TaskColumn: FC<TaskColumnProps> = ({
 }) => {
   //Стейт для редактирования названия заголовка столбца
   const [editTitle, setEditTitle] = useState(false);
+
+  const taskId = useMemo(()=> tasks.map((task)=> task.id), [tasks])
 
   //Вытаскиваем хук useSortable
   const {
@@ -77,6 +79,7 @@ const TaskColumn: FC<TaskColumnProps> = ({
       </div>
     );
   }
+  
 
   return (
     // ref={setNodeRef} style={style} указывается на тот элемент, который будет перемещаться
@@ -129,9 +132,11 @@ const TaskColumn: FC<TaskColumnProps> = ({
         </button>
       <div className="rounded-b bg-gray-400 w-full p-2">
         <div className="text-sm">
+        <SortableContext items={taskId}>
           {tasks.map((task) => {
             return <Task updateTask={updateTask} deleteTask={deleteTask} key={task.id} task={task} />;
           })}
+          </SortableContext>
         </div>
       </div>
     </div>

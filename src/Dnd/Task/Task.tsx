@@ -1,7 +1,9 @@
 import { FC, useState } from "react";
 import { AiOutlineMinusCircle } from "react-icons/ai";
 import { Id, ITask } from "../types";
-import TextareaAutosize from 'react-textarea-autosize';
+import TextareaAutosize from "react-textarea-autosize";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface TaskProps {
   task: ITask;
@@ -22,6 +24,39 @@ const Task: FC<TaskProps> = ({ task, deleteTask, updateTask }) => {
     setMouseOver(false); //это чтобы при нажатии на поле с текстом исчез значок удаления
   };
 
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: { type: "Task", task: task },
+    disabled: editTask, //это нужно для того, чтобы отключить функцию перетаскивания, когда мы редактируем имя заголовка таблицы, т.к. мы тянем за заголовок при перетаскивании
+  });
+
+  //стили для анимаций перемещения
+  const style = {
+    transition, //анимация при перестановке столбцов между друг другом
+    transform: CSS.Translate.toString(transform), //анимация перетаскивания столбца
+  };
+
+  if (isDragging) {
+    return (
+      <div
+        className="opacity-40 border-2 border-green-300 flex flex-row justify-between items-center bg-white p-2 rounded border-b mt-1 cursor-pointer"
+        style={style}
+        ref={setNodeRef}
+      >
+        <p className="my-auto h-auto w-48 overflow-x-hidden overflow-y-auto whitespace-pre-wrap">
+          {!editTask && task.content}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex flex-row justify-between items-center bg-white p-2 rounded border-b mt-1 border-gray-500 cursor-pointer hover:bg-teal-500"
@@ -29,6 +64,10 @@ const Task: FC<TaskProps> = ({ task, deleteTask, updateTask }) => {
       onMouseEnter={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
       onDoubleClick={toggleEdit}
+      style={style}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
     >
       <p className="my-auto h-auto w-48 overflow-x-hidden overflow-y-auto whitespace-pre-wrap">
         {!editTask && task.content}
